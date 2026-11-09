@@ -1,0 +1,691 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer"><title>Arby's equipment updates — design preview</title></head><body>
+<div id="arbys-customer-status-preview">
+  <style>
+    #arbys-customer-status-preview {
+      color-scheme: light;
+      --cs-bg: #ffffff;
+      --cs-paper: #ffffff;
+      --cs-ink: #202226;
+      --cs-muted: #586069;
+      --cs-line: #d9dee2;
+      --cs-red: #cb102e;
+      --cs-red-soft: #fff0f2;
+      --cs-cola: #492821;
+      --cs-cola-light: #aeb5bc;
+      --cs-green: #216749;
+      --cs-green-soft: #e8f4ed;
+      --cs-green-line: #a9cbb8;
+      --cs-sand: #f4f6f7;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--cs-ink);
+      line-height: 1.48;
+      background: transparent;
+      width: 100%;
+    }
+    #arbys-customer-status-preview * { box-sizing: border-box; }
+    #arbys-customer-status-preview [hidden] { display: none !important; }
+    #arbys-customer-status-preview .preview-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding: 0 0 14px;
+    }
+    #arbys-customer-status-preview .preview-controls-label {
+      color: var(--cs-muted);
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 3px;
+    }
+    #arbys-customer-status-preview .preview-controls button {
+      appearance: none;
+      background: var(--cs-paper);
+      color: var(--cs-ink);
+      border: 1px solid var(--cs-line);
+      border-radius: 100px;
+      padding: 9px 13px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 42px;
+    }
+    #arbys-customer-status-preview .preview-controls button[aria-pressed="true"] {
+      background: var(--cs-ink);
+      color: var(--cs-paper);
+      border-color: var(--cs-ink);
+    }
+    #arbys-customer-status-preview .preview-controls button:focus-visible {
+      outline: 3px solid var(--cs-red);
+      outline-offset: 2px;
+    }
+    #arbys-customer-status-preview .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    #arbys-customer-status-preview .request-page,
+    #arbys-customer-status-preview .closed-page {
+      background: var(--cs-bg);
+      border: 1px solid var(--cs-line);
+      overflow: hidden;
+    }
+    #arbys-customer-status-preview .site-header {
+      background: var(--cs-paper);
+      border-top: 7px solid var(--cs-red);
+      padding: 17px clamp(18px, 4vw, 46px) 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+    #arbys-customer-status-preview .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #arbys-customer-status-preview .brand-mark-fourpack {
+      width: 92px;
+      height: 85px;
+      object-fit: contain;
+      display: block;
+      flex: none;
+    }
+    #arbys-customer-status-preview .brand-name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+    #arbys-customer-status-preview .brand-descriptor {
+      color: var(--cs-muted);
+      font-size: 12px;
+      line-height: 1.2;
+      margin-top: 3px;
+    }
+    #arbys-customer-status-preview .demo-label {
+      color: var(--cs-muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: right;
+    }
+    #arbys-customer-status-preview .brand-wave {
+      position: relative;
+      height: 34px;
+      overflow: hidden;
+      background: var(--cs-red);
+    }
+    #arbys-customer-status-preview .brand-wave::after {
+      content: "";
+      position: absolute;
+      left: -4%;
+      bottom: -43px;
+      width: 108%;
+      height: 64px;
+      border-radius: 50% 50% 0 0;
+      background: var(--cs-bg);
+      transform: rotate(-1deg);
+    }
+    #arbys-customer-status-preview .page-main {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 32px clamp(18px, 4vw, 46px) 40px;
+    }
+    #arbys-customer-status-preview .eyebrow {
+      color: var(--cs-red);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    #arbys-customer-status-preview h1,
+    #arbys-customer-status-preview h2,
+    #arbys-customer-status-preview h3,
+    #arbys-customer-status-preview p { margin: 0; }
+    #arbys-customer-status-preview h1 {
+      font-size: clamp(28px, 4.2vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      margin: 9px 0 10px;
+      max-width: 700px;
+    }
+    #arbys-customer-status-preview .hero-copy {
+      color: var(--cs-muted);
+      font-size: 15px;
+      max-width: 700px;
+    }
+    #arbys-customer-status-preview .store-card {
+      margin-top: 27px;
+      padding: 20px 23px 22px;
+      background: var(--cs-paper);
+      border: 1px solid var(--cs-line);
+      border-left: 4px solid var(--cs-red);
+      border-radius: 13px;
+    }
+    #arbys-customer-status-preview .store-card h2 {
+      font-size: 16px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    #arbys-customer-status-preview .store-pairs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px 22px;
+      margin: 0;
+    }
+    #arbys-customer-status-preview .store-pairs dt {
+      color: var(--cs-muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    #arbys-customer-status-preview .store-pairs dd {
+      margin: 0;
+      color: var(--cs-ink);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+    #arbys-customer-status-preview .summary-grid {
+      margin-top: 17px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.18fr) minmax(260px, .82fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    #arbys-customer-status-preview .summary-card,
+    #arbys-customer-status-preview .progress-card {
+      background: var(--cs-paper);
+      border: 1px solid var(--cs-line);
+      border-radius: 18px;
+      padding: 23px;
+    }
+    #arbys-customer-status-preview .summary-card h2,
+    #arbys-customer-status-preview .progress-card h2 {
+      font-size: 16px;
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+    #arbys-customer-status-preview .summary-pairs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 24px;
+      margin: 0;
+    }
+    #arbys-customer-status-preview .summary-pairs dt {
+      color: var(--cs-muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    #arbys-customer-status-preview .summary-pairs dd {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    #arbys-customer-status-preview .summary-pairs dd small {
+      display: block;
+      color: var(--cs-muted);
+      font-size: 12px;
+      font-weight: 400;
+      margin-top: 4px;
+    }
+    #arbys-customer-status-preview .summary-note {
+      background: var(--cs-sand);
+      border-radius: 10px;
+      color: var(--cs-ink);
+      margin-top: 22px;
+      padding: 11px 13px;
+      font-size: 13px;
+    }
+    #arbys-customer-status-preview .progress-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 88px;
+      gap: 16px;
+      align-items: center;
+      border-top: 4px solid var(--cs-red);
+    }
+    #arbys-customer-status-preview .progress-card h2 { margin-bottom: 10px; }
+    #arbys-customer-status-preview .progress-count {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -.04em;
+      line-height: 1;
+    }
+    #arbys-customer-status-preview .progress-word {
+      color: var(--cs-muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    #arbys-customer-status-preview .next-up {
+      color: var(--cs-ink);
+      font-size: 13px;
+      margin-top: 22px;
+    }
+    #arbys-customer-status-preview .next-up strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 14px;
+    }
+    #arbys-customer-status-preview .glass {
+      position: relative;
+      width: 76px;
+      height: 110px;
+      margin: 10px auto 0;
+      border: 3px solid var(--cs-cola-light);
+      border-top: 5px solid var(--cs-cola-light);
+      border-radius: 4px 4px 13px 13px;
+      overflow: hidden;
+      transform: perspective(140px) rotateX(-3deg);
+    }
+    #arbys-customer-status-preview .glass::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 7px;
+      width: 9px;
+      height: 71px;
+      border-radius: 100px;
+      background: rgba(255,255,255,.63);
+      z-index: 2;
+    }
+    #arbys-customer-status-preview .glass-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 33.333%;
+      background: var(--cs-cola);
+      transition: height .35s ease;
+    }
+    #arbys-customer-status-preview .glass-fill::before,
+    #arbys-customer-status-preview .glass-fill::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(255,255,255,.65);
+      border-radius: 50%;
+      width: 7px;
+      height: 7px;
+      left: 44px;
+      bottom: 14px;
+    }
+    #arbys-customer-status-preview .glass-fill::after {
+      width: 4px;
+      height: 4px;
+      left: 32px;
+      bottom: 29px;
+    }
+    #arbys-customer-status-preview .glass-caption {
+      text-align: center;
+      color: var(--cs-muted);
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    #arbys-customer-status-preview .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-top: 38px;
+      margin-bottom: 11px;
+    }
+    #arbys-customer-status-preview .section-title-row h2 {
+      font-size: 23px;
+      line-height: 1.2;
+      letter-spacing: -.02em;
+    }
+    #arbys-customer-status-preview .section-title-row p {
+      color: var(--cs-muted);
+      font-size: 12px;
+      text-align: right;
+    }
+    #arbys-customer-status-preview .journey {
+      display: flex;
+      height: 40px;
+      margin: 0 0 24px;
+      overflow: hidden;
+      border: 2px solid var(--cs-red);
+      border-radius: 100px;
+      background: var(--cs-paper);
+    }
+    #arbys-customer-status-preview .journey span {
+      position: relative;
+      display: grid;
+      flex: 1 1 0;
+      min-width: 0;
+      place-items: center;
+      background: var(--cs-paper);
+      color: var(--cs-red);
+      font-size: 13px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    #arbys-customer-status-preview .journey span.is-done {
+      background: var(--cs-red);
+      color: var(--cs-paper);
+    }
+    #arbys-customer-status-preview .journey span.is-na {
+      background: var(--cs-sand);
+      color: var(--cs-muted);
+    }
+    #arbys-customer-status-preview .journey span + span::before {
+      content: "";
+      position: absolute;
+      left: -2px;
+      top: -20%;
+      width: 4px;
+      height: 140%;
+      transform: skew(-18deg);
+      background: var(--cs-red);
+    }
+    #arbys-customer-status-preview .journey span.is-done::before { background: var(--cs-paper); }
+    #arbys-customer-status-preview .milestones {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    #arbys-customer-status-preview .milestone {
+      background: var(--cs-paper);
+      border: 1px solid var(--cs-line);
+      border-radius: 14px;
+      padding: 17px 17px 16px;
+      min-height: 166px;
+      display: flex;
+      flex-direction: column;
+    }
+    #arbys-customer-status-preview .milestone.is-done {
+      background: var(--cs-green-soft);
+      border-color: var(--cs-green-line);
+      border-top: 3px solid var(--cs-green);
+    }
+    #arbys-customer-status-preview .milestone.is-na { opacity: .72; }
+    #arbys-customer-status-preview .milestone-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 13px;
+    }
+    #arbys-customer-status-preview .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      flex: none;
+      border-radius: 50%;
+      background: var(--cs-sand);
+      color: var(--cs-ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    #arbys-customer-status-preview .is-done .step-number {
+      background: var(--cs-green-soft);
+      color: var(--cs-green);
+    }
+    #arbys-customer-status-preview .milestone-status {
+      color: var(--cs-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: right;
+    }
+    #arbys-customer-status-preview .is-done .milestone-status { color: var(--cs-green); }
+    #arbys-customer-status-preview .milestone h3 {
+      font-size: 15px;
+      line-height: 1.25;
+      margin-bottom: 7px;
+    }
+    #arbys-customer-status-preview .milestone p {
+      color: var(--cs-muted);
+      font-size: 12px;
+      line-height: 1.38;
+      margin-bottom: 15px;
+    }
+    #arbys-customer-status-preview .milestone-date {
+      color: var(--cs-ink);
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: auto;
+    }
+    #arbys-customer-status-preview .notice {
+      margin-top: 24px;
+      background: var(--cs-red-soft);
+      border-left: 3px solid var(--cs-red);
+      border-radius: 0 9px 9px 0;
+      padding: 15px 17px;
+      color: var(--cs-ink);
+      font-size: 13px;
+    }
+    #arbys-customer-status-preview .notice strong { display: block; margin-bottom: 3px; }
+    #arbys-customer-status-preview .site-footer {
+      border-top: 1px solid var(--cs-line);
+      color: var(--cs-muted);
+      padding: 20px clamp(18px, 4vw, 46px);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    #arbys-customer-status-preview .closed-main {
+      min-height: 480px;
+      max-width: 750px;
+      margin: auto;
+      padding: 84px clamp(20px, 5vw, 58px) 110px;
+    }
+    #arbys-customer-status-preview .closed-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--cs-sand);
+      border: 2px solid var(--cs-line);
+      color: var(--cs-muted);
+      font-size: 25px;
+      font-weight: 400;
+      margin-bottom: 22px;
+    }
+    #arbys-customer-status-preview .closed-main h1 { margin-top: 8px; }
+    #arbys-customer-status-preview .closed-main p {
+      color: var(--cs-muted);
+      font-size: 16px;
+      max-width: 550px;
+      margin-top: 14px;
+    }
+    @media (max-width: 760px) {
+      #arbys-customer-status-preview .store-pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #arbys-customer-status-preview .summary-grid { grid-template-columns: 1fr; }
+      #arbys-customer-status-preview .milestones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+      #arbys-customer-status-preview .site-header { flex-wrap: wrap; }
+      #arbys-customer-status-preview .brand-mark-fourpack { width: 70px; height: 65px; }
+      #arbys-customer-status-preview .site-header { align-items: flex-start; }
+      #arbys-customer-status-preview .demo-label { display: none; }
+      #arbys-customer-status-preview .page-main { padding-top: 25px; }
+      #arbys-customer-status-preview .store-pairs { grid-template-columns: 1fr; gap: 13px; }
+      #arbys-customer-status-preview .store-card { padding: 18px; }
+      #arbys-customer-status-preview .summary-pairs { grid-template-columns: 1fr; gap: 16px; }
+      #arbys-customer-status-preview .milestones { grid-template-columns: 1fr; gap: 10px; }
+      #arbys-customer-status-preview .milestone { min-height: 0; }
+      #arbys-customer-status-preview .section-title-row { display: block; }
+      #arbys-customer-status-preview .section-title-row p { text-align: left; margin-top: 4px; }
+      #arbys-customer-status-preview .progress-card { grid-template-columns: minmax(0, 1fr) 82px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #arbys-customer-status-preview .glass-fill { transition: none; }
+    }
+  </style>
+
+  <div class="preview-controls" role="group" aria-label="Invented preview states">
+    <span class="preview-controls-label">Invented preview</span>
+    <button type="button" data-view="install" aria-pressed="true">Upgrade / install</button>
+    <button type="button" data-view="reconnect" aria-pressed="false">Disconnect / reconnect</button>
+    <button type="button" data-view="closed" aria-pressed="false">Inactive link</button>
+  </div>
+  <p class="sr-only" id="cs-announcer" aria-live="polite"></p>
+
+  <div class="request-page" id="cs-active-page">
+    <header class="site-header">
+      <div class="brand">
+        <img class="brand-mark-fourpack" src="arbys-four-bottle-reference.png" alt="" aria-hidden="true">
+        <div><div class="brand-name">Arby’s equipment updates</div><div class="brand-descriptor">Coca-Cola service coordination</div></div>
+      </div>
+      <div class="demo-label">Example request<br>No customer data</div>
+    </header>
+    <div class="brand-wave" aria-hidden="true"></div>
+    <main class="page-main">
+      <div class="eyebrow">Request in progress</div>
+      <h1 id="cs-title">Equipment upgrade and reconnect</h1>
+      <p class="hero-copy" id="cs-scope">The Arby’s team is coordinating a new dispenser and the field work to reconnect it. This page shows milestones once they are confirmed.</p>
+
+      <section class="store-card" aria-labelledby="cs-store-title">
+        <h2 id="cs-store-title">Store details</h2>
+        <dl class="store-pairs">
+          <div><dt>Arby’s store number</dt><dd>Example 0123</dd></div>
+          <div><dt>Street address</dt><dd>100 Sample Lane</dd></div>
+          <div><dt>BP number</dt><dd>BP-DEMO-0123</dd></div>
+          <div><dt>Outlet ACN</dt><dd>ACN-DEMO-4567</dd></div>
+        </dl>
+      </section>
+
+      <div class="summary-grid">
+        <section class="summary-card" aria-labelledby="cs-summary-title">
+          <h2 id="cs-summary-title">At a glance</h2>
+          <dl class="summary-pairs">
+            <div><dt>Order status</dt><dd>Entered for scheduling<small>Last confirmed November 8</small></dd></div>
+            <div><dt id="cs-requested-date-label">Requested install date</dt><dd>December 14, 2026<small>Requested by the customer</small></dd></div>
+            <div><dt>Confirmed schedule</dt><dd>Not confirmed<small>We’ll update this when field timing is set</small></dd></div>
+            <div><dt>Quote summary</dt><dd id="cs-quote">Under review<small id="cs-quote-detail">Approved scope and price can appear here later</small></dd></div>
+          </dl>
+          <div class="summary-note"><strong>Illustrative targets only.</strong> <span id="cs-timing-detail">One week, three days, and one day before the requested install, plus next-day closeout, are proposed timing. Service dates and rules still need confirmation.</span></div>
+        </section>
+
+        <section class="progress-card" aria-labelledby="cs-progress-title">
+          <div>
+            <h2 id="cs-progress-title">How it’s going</h2>
+            <div class="progress-count" id="cs-progress-count">3 of 9</div>
+            <div class="progress-word">milestones confirmed</div>
+            <div class="next-up">Next checkpoint<strong id="cs-next">Equipment verification</strong></div>
+          </div>
+          <div>
+            <div class="glass" role="img" aria-label="Three of nine applicable milestones confirmed" id="cs-glass"><div class="glass-fill" id="cs-glass-fill"></div></div>
+            <div class="glass-caption">Fills as work is confirmed</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="section-title-row"><h2>Request timeline</h2><p>Example events are marked Done; future dates are illustrative.</p></div>
+      <div class="journey" role="img" aria-label="Nine milestones: three done and six planned" id="cs-journey"><span class="is-done">1</span><span class="is-done">2</span><span class="is-done">3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+
+      <ol class="milestones">
+        <li class="milestone is-done"><div class="milestone-header"><span class="step-number">1</span><span class="milestone-status">Done</span></div><h3>Order submitted</h3><p>Your request was sent through the Arby’s form.</p><div class="milestone-date">Confirmed November 6</div></li>
+        <li class="milestone is-done"><div class="milestone-header"><span class="step-number">2</span><span class="milestone-status">Done</span></div><h3>Order received</h3><p>The Arby’s team acknowledged your request.</p><div class="milestone-date">Confirmed November 7</div></li>
+        <li class="milestone is-done"><div class="milestone-header"><span class="step-number">3</span><span class="milestone-status">Done</span></div><h3>Entered for scheduling</h3><p>The work was keyed into the service system.</p><div class="milestone-date">Confirmed November 8</div></li>
+        <li class="milestone" data-shipping-step="4"><div class="milestone-header"><span class="step-number">4</span><span class="milestone-status">Planned</span></div><h3>Equipment verified</h3><p class="milestone-description">The team confirms equipment availability one week before install.</p><div class="milestone-date">Target December 7</div></li>
+        <li class="milestone" data-shipping-step="5"><div class="milestone-header"><span class="step-number">5</span><span class="milestone-status">Planned</span></div><h3>Equipment sent</h3><p class="milestone-description">The team checks shipment status three days before install.</p><div class="milestone-date">Target December 11</div></li>
+        <li class="milestone" data-shipping-step="6"><div class="milestone-header"><span class="step-number">6</span><span class="milestone-status">Planned</span></div><h3>Provider receives equipment</h3><p class="milestone-description">Receipt is confirmed one day before the event.</p><div class="milestone-date">Target December 13</div></li>
+        <li class="milestone"><div class="milestone-header"><span class="step-number">7</span><span class="milestone-status">Planned</span></div><h3>Store readiness confirmed</h3><p>The team checks that the location is ready for field work.</p><div class="milestone-date" id="cs-readiness-date">Before installation</div></li>
+        <li class="milestone"><div class="milestone-header"><span class="step-number">8</span><span class="milestone-status">Planned</span></div><h3 id="cs-service-day-title">Installation day</h3><p>The field team completes the scheduled work and records its result.</p><div class="milestone-date">Requested December 14</div></li>
+        <li class="milestone"><div class="milestone-header"><span class="step-number">9</span><span class="milestone-status">Planned</span></div><h3>Closeout check</h3><p id="cs-closeout-description">Installation completion and final readiness are confirmed after the event.</p><div class="milestone-date">Target December 15</div></li>
+      </ol>
+
+      <div class="notice"><strong>Need to change your request?</strong>Reply to the Arby’s team email that shared this page. This timeline is a status update, not a confirmed appointment.</div>
+    </main>
+    <footer class="site-footer"><span>Example only · Last verified update November 8, 2026 at 10:42 AM ET</span><span>Status link remains active through final closeout.</span></footer>
+  </div>
+
+  <div class="closed-page" id="cs-closed-page" hidden>
+    <header class="site-header"><div class="brand"><img class="brand-mark-fourpack" src="arbys-four-bottle-reference.png" alt="" aria-hidden="true"><div><div class="brand-name">Arby’s equipment updates</div><div class="brand-descriptor">Coca-Cola service coordination</div></div></div><div class="demo-label">Example inactive state</div></header>
+    <div class="brand-wave" aria-hidden="true"></div>
+    <main class="closed-main">
+      <div class="closed-icon" aria-hidden="true">—</div>
+      <div class="eyebrow">Link inactive</div>
+      <h1>This status link is no longer active.</h1>
+      <p>For an update, reply to the team email that shared it.</p>
+    </main>
+    <footer class="site-footer"><span>Example only · No request details shown when this link is inactive.</span></footer>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.getElementById('arbys-customer-status-preview');
+      const openPage = root.querySelector('#cs-active-page');
+      const closedPage = root.querySelector('#cs-closed-page');
+      const buttons = [...root.querySelectorAll('[data-view]')];
+      const shippingRows = [...root.querySelectorAll('[data-shipping-step]')];
+      const shippingDescriptions = [
+        'The team confirms equipment availability one week before install.',
+        'The team checks shipment status three days before install.',
+        'Receipt is confirmed one day before the event.'
+      ];
+      const shippingDates = ['Target December 7', 'Target December 11', 'Target December 13'];
+      const valid = new Set(['install', 'reconnect', 'closed']);
+
+      function show(view, announce = false) {
+        if (!valid.has(view)) view = 'install';
+        const closed = view === 'closed';
+        const reconnect = view === 'reconnect';
+        openPage.hidden = closed;
+        closedPage.hidden = !closed;
+        buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
+        if (!closed) {
+          root.querySelector('#cs-title').textContent = reconnect ? 'Disconnect and reconnect' : 'Equipment upgrade and reconnect';
+          root.querySelector('#cs-scope').textContent = reconnect
+            ? 'The Arby’s team is coordinating a scheduled disconnect and reconnect of existing equipment. No equipment shipment is planned for this example.'
+            : 'The Arby’s team is coordinating a new dispenser and the field work to reconnect it. This page shows milestones once they are confirmed.';
+          root.querySelector('#cs-quote').firstChild.textContent = reconnect ? 'Not needed' : 'Under review';
+          root.querySelector('#cs-quote-detail').textContent = reconnect ? 'No new equipment quote for this example' : 'Approved scope and price can appear here later';
+          root.querySelector('#cs-requested-date-label').textContent = reconnect ? 'Requested service date' : 'Requested install date';
+          root.querySelector('#cs-readiness-date').textContent = reconnect ? 'Before service' : 'Before installation';
+          root.querySelector('#cs-service-day-title').textContent = reconnect ? 'Service day' : 'Installation day';
+          root.querySelector('#cs-closeout-description').textContent = reconnect
+            ? 'Service completion and final readiness are confirmed after the event.'
+            : 'Installation completion and final readiness are confirmed after the event.';
+          root.querySelector('#cs-progress-count').textContent = reconnect ? '3 of 6' : '3 of 9';
+          root.querySelector('#cs-next').textContent = reconnect ? 'Store readiness confirmation' : 'Equipment verification';
+          root.querySelector('#cs-timing-detail').textContent = reconnect
+            ? 'Store readiness before the requested service date and next-day closeout are proposed timing. Service dates and rules still need confirmation.'
+            : 'One week, three days, and one day before the requested install, plus next-day closeout, are proposed timing. Service dates and rules still need confirmation.';
+          root.querySelector('#cs-glass').setAttribute('aria-label', reconnect ? 'Three of six applicable milestones confirmed' : 'Three of nine applicable milestones confirmed');
+          root.querySelector('#cs-glass-fill').style.height = reconnect ? '50%' : '33.333%';
+          root.querySelector('#cs-journey').setAttribute('aria-label', reconnect ? 'Nine listed milestones: three done, three not needed, three planned' : 'Nine milestones: three done and six planned');
+          [...root.querySelectorAll('#cs-journey span')].slice(3, 6).forEach(segment => segment.classList.toggle('is-na', reconnect));
+          shippingRows.forEach((row, index) => {
+            row.classList.toggle('is-na', reconnect);
+            row.querySelector('.milestone-status').textContent = reconnect ? 'Not needed' : 'Planned';
+            row.querySelector('.milestone-description').textContent = reconnect ? 'Existing equipment remains at this location; no shipment is planned.' : shippingDescriptions[index];
+            row.querySelector('.milestone-date').textContent = reconnect ? 'Not applicable to this request' : shippingDates[index];
+          });
+        }
+        if (announce) root.querySelector('#cs-announcer').textContent = closed ? 'Previewing an inactive link.' : reconnect ? 'Previewing a disconnect and reconnect request.' : 'Previewing an equipment upgrade and install request.';
+      }
+      buttons.forEach(button => button.addEventListener('click', () => {
+        const view = button.dataset.view;
+        show(view, true);
+        if (window.openai && typeof window.openai.setWidgetState === 'function') {
+          window.openai.setWidgetState({ modelContent: { previewView: view }, privateContent: { view } }).catch(() => {});
+        }
+      }));
+      const saved = window.openai && window.openai.widgetState && window.openai.widgetState.privateContent;
+      show(saved && saved.view ? saved.view : 'install');
+      window.addEventListener('openai:set_globals', event => {
+        const state = event.detail && event.detail.globals && event.detail.globals.widgetState;
+        if (state && state.privateContent && state.privateContent.view) show(state.privateContent.view);
+      });
+    })();
+  </script>
+</div>
+
+</body></html>
