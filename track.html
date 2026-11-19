@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Arby's equipment updates</title>
+  <link rel="stylesheet" href="track.css">
+  <script type="module" src="track.mjs"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div><strong>Arby's equipment updates</strong><span>Coca-Cola service coordination</span></div>
+    </header>
+    <main>
+      <section id="loading" class="state-card" role="status">Opening your project status…</section>
+      <section id="unavailable" class="state-card" role="alert" hidden>
+        <h1>This status link is unavailable.</h1>
+        <p>It may have expired, changed, or become inactive. Please reply to the email that shared it if you need an update.</p>
+      </section>
+      <section id="project" hidden>
+        <p class="eyebrow">Your installation progress</p>
+        <h1>Follow your installation</h1>
+        <p class="intro">The steps below reflect verified information from the Arby's service workstream. A requested date is a planning request until the installation date is confirmed.</p>
+        <div class="summary-grid">
+          <div class="summary-card"><span>Customer requested date</span><strong id="requested-date"></strong><small>This is the date requested in the form.</small></div>
+          <div class="summary-card"><span>Confirmed installation date</span><strong id="confirmed-date"></strong><small id="confirmed-note"></small></div>
+          <div class="summary-card progress-card"><span>Progress</span><strong id="progress-count"></strong><small>of six phases complete</small></div>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">The path ahead</p><h2>Project milestones</h2></div><p id="source-time"></p></div>
+        <ol id="milestone-list" class="milestone-list"></ol>
+        <p class="help-note">Dates and work steps can change as plans are confirmed. For questions or a change to your request, reply to the email that shared this link.</p>
+      </section>
+    </main>
+    <footer>Arby's equipment updates · Coca-Cola service coordination</footer>
+  </div>
+</body>
+</html>
