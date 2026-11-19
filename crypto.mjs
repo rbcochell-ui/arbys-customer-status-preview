@@ -2,6 +2,7 @@ export const CIPHER_SCHEMA = 'arbys-customer-cipher/v1';
 export const LEGACY_PROJECT_SCHEMA = 'arbys-customer-status/v1';
 export const PROJECT_SCHEMA = 'arbys-customer-status/v2';
 export const ROSTER_PROJECT_SCHEMA = 'arbys-customer-status/roster-v1';
+export const OBSERVED_SUBSET_SCHEMA = 'arbys-customer-status/observed-v2';
 export const AAD_PREFIX = 'arbys-customer-status/v1:';
 export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 const FUTURE_SKEW_MS = 5 * 60 * 1000;
@@ -16,12 +17,15 @@ const VISIT_TYPES = new Set(['Survey', 'LineRun', 'Install', 'FireUp', 'Other', 
 const VISIT_PROGRESS = new Set(['notConfirmed', 'scheduled', 'inProgress', 'complete', 'cancelled']);
 const OBSERVED_STATES = new Set([
   'PendingSchedule', 'PendingReadiness', 'Open', 'Scheduled',
-  'InProgress', 'Completed', 'Cancelled', 'NeedsReview',
+  'InProgress', 'PendingCloseout', 'Completed', 'Closed', 'Cancelled', 'NeedsReview',
+]);
+const ACTIVE_OBSERVED_STATES = new Set([
+  'PendingSchedule', 'PendingReadiness', 'Open', 'Scheduled', 'InProgress', 'PendingCloseout',
 ]);
 export const PHASES = Object.freeze([
   ['requestReceived', 'Request received', 'Your request is in our workstream.'],
   ['dateReview', 'Date review', 'We are checking the service date with the provider and your team.'],
-  ['workOrders', 'Work orders', 'The field visits needed for this request are being arranged.'],
+  ['workOrders', 'Work orders', 'At least one linked work order still has an active status in Thirsty.'],
   ['equipmentDelivery', 'Equipment and delivery', 'Equipment and delivery readiness are being checked.'],
   ['installation', 'Installation', 'The scheduled field work is being carried out.'],
   ['closeout', 'Closeout', 'The final work and records are being checked.'],
@@ -48,31 +52,42 @@ function validUtc(value) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().replace('.000Z', 'Z') === value;
 }
 
+// A completed or canceled visit does not prove that the entire work-order plan is complete.
+export function rosterWorkOrdersPhase(visits) {
+  return visits.some((visit) => ACTIVE_OBSERVED_STATES.has(visit.observedStatus))
+    ? 'inProgress' : 'pending';
+}
+
 export function validateProject(value) {
-  if (value?.schema === ROSTER_PROJECT_SCHEMA) {
+  const roster = value?.schema === ROSTER_PROJECT_SCHEMA;
+  const observedSubset = value?.schema === OBSERVED_SUBSET_SCHEMA;
+  if (roster || observedSubset) {
     if (!exactKeys(value, ['schema', 'slug', 'customerRequestedDate', 'lastVerifiedAtUtc', 'milestones', 'visits'])
       || !HANDLE_RE.test(value.slug) || !validDate(value.customerRequestedDate, true)
       || !validUtc(value.lastVerifiedAtUtc)) {
-      throw new Error('Customer roster shape or identity is invalid');
+      throw new Error('Customer work-order view shape or identity is invalid');
     }
     if (!exactKeys(value.milestones, PHASE_IDS)
       || value.milestones.requestReceived !== 'complete'
       || ['dateReview', 'equipmentDelivery', 'installation', 'closeout']
-        .some((id) => value.milestones[id] !== 'pending')) {
-      throw new Error('Roster release cannot promote unverified project phases');
+        .some((id) => value.milestones[id] !== 'pending')
+      || (observedSubset && value.milestones.workOrders !== 'pending')) {
+      throw new Error('Work-order view cannot promote unverified project phases');
     }
-    if (!Array.isArray(value.visits) || value.visits.length > 64
-      || value.milestones.workOrders !== (value.visits.length ? 'inProgress' : 'pending')) {
-      throw new Error('Roster visits and work-order phase disagree');
+    if (!Array.isArray(value.visits) || value.visits.length > 64) {
+      throw new Error('Work-order visits are invalid');
     }
     const refs = new Set();
     for (const visit of value.visits) {
       if (!exactKeys(visit, ['ref', 'visitType', 'observedStatus'])
         || !VISIT_REF_RE.test(visit.ref) || !VISIT_TYPES.has(visit.visitType)
         || !OBSERVED_STATES.has(visit.observedStatus) || refs.has(visit.ref)) {
-        throw new Error('Roster visit is invalid or repeated');
+        throw new Error('Work-order visit is invalid or repeated');
       }
       refs.add(visit.ref);
+    }
+    if (roster && value.milestones.workOrders !== rosterWorkOrdersPhase(value.visits)) {
+      throw new Error('Roster visits and work-order phase disagree');
     }
     return value;
   }
