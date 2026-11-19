@@ -23,7 +23,7 @@ function displayDate(date) {
 }
 
 function phaseStatus(status) {
-  return status === 'complete' ? 'Complete' : status === 'inProgress' ? 'In progress' : 'Upcoming';
+  return status === 'complete' ? 'Complete' : status === 'inProgress' ? 'In progress' : 'Not confirmed';
 }
 
 function render(project) {
@@ -52,7 +52,8 @@ function render(project) {
     badge.textContent = phaseStatus(status);
     top.append(heading, badge);
     const explanation = document.createElement('p');
-    explanation.textContent = description;
+    explanation.textContent = status === 'pending'
+      ? 'We have not verified an update for this step.' : description;
     copy.append(top, explanation);
     item.append(number, copy);
     return item;
