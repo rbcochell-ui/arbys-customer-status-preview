@@ -1,12 +1,18 @@
 export const CIPHER_SCHEMA = 'arbys-customer-cipher/v1';
-export const PROJECT_SCHEMA = 'arbys-customer-status/v1';
+export const LEGACY_PROJECT_SCHEMA = 'arbys-customer-status/v1';
+export const PROJECT_SCHEMA = 'arbys-customer-status/v2';
 export const AAD_PREFIX = 'arbys-customer-status/v1:';
+export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+const FUTURE_SKEW_MS = 5 * 60 * 1000;
 
 const HANDLE_RE = /^p_[0-9a-f]{32}$/;
 const KEY_RE = /^[A-Za-z0-9_-]{43}$/;
 const NONCE_RE = /^[A-Za-z0-9_-]{16}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+const VISIT_REF_RE = /^v_[0-9a-f]{12}$/;
+const VISIT_TYPES = new Set(['Survey', 'LineRun', 'Install', 'FireUp', 'Other', 'Undefined']);
+const VISIT_PROGRESS = new Set(['notConfirmed', 'scheduled', 'inProgress', 'complete', 'cancelled']);
 export const PHASES = Object.freeze([
   ['requestReceived', 'Request received', 'Your request is in our workstream.'],
   ['dateReview', 'Date review', 'We are checking the service date with the provider and your team.'],
@@ -38,10 +44,15 @@ function validUtc(value) {
 }
 
 export function validateProject(value) {
-  if (!exactKeys(value, ['schema', 'slug', 'customerRequestedDate', 'confirmedInstallDate', 'lastVerifiedAtUtc', 'milestones'])) {
+  const legacy = value?.schema === LEGACY_PROJECT_SCHEMA;
+  const fields = ['schema', 'slug', 'customerRequestedDate', 'confirmedInstallDate', 'lastVerifiedAtUtc', 'milestones'];
+  if (!legacy) fields.push('visits');
+  if (!exactKeys(value, fields)) {
     throw new Error('Customer status has an unexpected shape');
   }
-  if (value.schema !== PROJECT_SCHEMA || !HANDLE_RE.test(value.slug)) throw new Error('Customer status identity is invalid');
+  if (![LEGACY_PROJECT_SCHEMA, PROJECT_SCHEMA].includes(value.schema) || !HANDLE_RE.test(value.slug)) {
+    throw new Error('Customer status identity is invalid');
+  }
   if (!validDate(value.customerRequestedDate, true) || !validDate(value.confirmedInstallDate, true)
     || !validUtc(value.lastVerifiedAtUtc)) throw new Error('Customer status dates are invalid');
   if (!exactKeys(value.milestones, PHASE_IDS)
@@ -58,7 +69,67 @@ export function validateProject(value) {
   if (value.milestones.closeout === 'complete' && value.milestones.installation !== 'complete') {
     throw new Error('Closeout needs completed installation');
   }
+  if (!legacy) {
+    if (!Array.isArray(value.visits) || value.visits.length > 64) {
+      throw new Error('Customer visits must be a bounded array');
+    }
+    const refs = new Set();
+    for (const visit of value.visits) {
+      if (!exactKeys(visit, ['ref', 'visitType', 'progress'])
+        || !VISIT_REF_RE.test(visit.ref)
+        || !VISIT_TYPES.has(visit.visitType)
+        || !VISIT_PROGRESS.has(visit.progress)
+        || refs.has(visit.ref)) {
+        throw new Error('Customer visit is invalid or repeated');
+      }
+      refs.add(visit.ref);
+    }
+    const onSiteVisits = value.visits.filter((visit) => ['Install', 'FireUp'].includes(visit.visitType));
+    if (value.milestones.workOrders !== 'pending' && value.visits.length === 0) {
+      throw new Error('Active work-order phase needs a verified visit roster');
+    }
+    if (value.milestones.workOrders === 'pending' && value.visits.length > 0) {
+      throw new Error('Published visits need an active work-order phase');
+    }
+    if (value.milestones.workOrders === 'complete'
+      && (value.visits.some((visit) => visit.visitType === 'Undefined')
+        || onSiteVisits.length === 0
+        || onSiteVisits.some((visit) => visit.progress === 'cancelled'))) {
+      throw new Error('Complete work-order plan needs defined active on-site visits');
+    }
+    if (value.confirmedInstallDate === null
+      && onSiteVisits.some((visit) => ['inProgress', 'complete'].includes(visit.progress))) {
+      throw new Error('Installation visit needs a confirmed installation date');
+    }
+    if (onSiteVisits.some((visit) => ['inProgress', 'complete'].includes(visit.progress))
+      && (value.milestones.workOrders !== 'complete' || value.milestones.installation === 'pending')) {
+      throw new Error('Active installation visit needs a confirmed work-order plan and installation phase');
+    }
+    if (value.milestones.installation === 'inProgress'
+      && !onSiteVisits.some((visit) => ['inProgress', 'complete'].includes(visit.progress))) {
+      throw new Error('In-progress installation needs an active on-site visit');
+    }
+    if (value.milestones.installation === 'complete'
+      && (onSiteVisits.length === 0 || onSiteVisits.some((visit) => visit.progress !== 'complete'))) {
+      throw new Error('Installation phase conflicts with an unfinished installation visit');
+    }
+    if (value.milestones.installation === 'complete'
+      && (value.milestones.workOrders !== 'complete' || value.milestones.equipmentDelivery !== 'complete')) {
+      throw new Error('Installation completion needs verified work-order and equipment plans');
+    }
+    if (value.milestones.closeout === 'complete'
+      && value.visits.some((visit) => visit.progress !== 'complete')) {
+      throw new Error('Closeout phase conflicts with an unfinished visit');
+    }
+  }
   return value;
+}
+
+export function freshnessState(lastVerifiedAtUtc, nowMs = Date.now()) {
+  const capturedMs = Date.parse(lastVerifiedAtUtc);
+  if (!Number.isFinite(capturedMs) || !Number.isFinite(nowMs)
+    || capturedMs - nowMs > FUTURE_SKEW_MS) return 'clockMismatch';
+  return nowMs - capturedMs >= STALE_AFTER_MS ? 'stale' : 'current';
 }
 
 export function decodeBase64Url(value) {

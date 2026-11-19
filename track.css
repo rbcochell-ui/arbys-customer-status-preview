@@ -19,6 +19,9 @@ h3 { margin-bottom: 0; font-size: 1.12rem; }
 .intro { max-width: 760px; line-height: 1.55; color: #4b5865; font-size: 1.06rem; }
 .state-card { max-width: 760px; margin: 50px auto; padding: 34px; border: 1px solid #dde1e5; border-radius: 18px; background: #fff; box-shadow: 0 9px 32px #26323e0d; line-height: 1.5; }
 .state-card p { margin-bottom: 0; }
+.freshness-warning { max-width: 880px; margin: 28px 0 6px; padding: 18px 22px; border: 2px solid #a66508; border-radius: 12px; background: #fff4d8; color: #4b330c; line-height: 1.45; }
+.freshness-warning strong { display: block; margin-bottom: 5px; font-size: 1.12rem; }
+.freshness-warning p { margin: 0; }
 .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 30px 0 42px; }
 .summary-card { min-height: 158px; padding: 23px; border: 1px solid #dfe4e8; border-top: 5px solid #c71f32; border-radius: 14px; background: #fff; box-shadow: 0 5px 17px #26323e09; }
 .summary-card span, .summary-card small { display: block; color: #5b6772; }
@@ -41,6 +44,24 @@ h3 { margin-bottom: 0; font-size: 1.12rem; }
 .milestone-inProgress { border-left: 5px solid #c71f32; }
 .milestone-inProgress .milestone-number, .milestone-inProgress .status-badge { color: #9b1526; background: #fde7ea; }
 .milestone-pending { border-left: 5px solid #8b9aa7; }
+.visit-heading { margin-top: 48px; }
+.visit-heading > p { max-width: 360px; line-height: 1.45; }
+.visit-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 0; margin: 0; list-style: none; }
+.visit { min-height: 142px; padding: 20px 22px; border: 1px solid #dfe4e8; border-left: 5px solid #8b9aa7; border-radius: 14px; background: #fff; }
+.visit-top { display: flex; justify-content: space-between; align-items: start; gap: 14px; }
+.visit-caption { display: block; margin-bottom: 7px; color: #5b6772; font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.visit h3 { font-size: 1.18rem; }
+.visit p { margin: 13px 0 0; color: #52606b; line-height: 1.45; }
+.visit-badge { flex: none; padding: 6px 10px; border-radius: 999px; background: #edf0f2; color: #3b4954; font-size: .78rem; font-weight: 800; }
+.visit-scheduled { border-left-color: #376796; }
+.visit-scheduled .visit-badge { background: #e6f0fa; color: #244d75; }
+.visit-inProgress { border-left-color: #c71f32; }
+.visit-inProgress .visit-badge { background: #fde7ea; color: #9b1526; }
+.visit-complete { border-left-color: #15864c; }
+.visit-complete .visit-badge { background: #dff2e7; color: #075b2e; }
+.visit-cancelled { border-left-color: #815066; }
+.visit-cancelled .visit-badge { background: #f3e7ed; color: #683b50; }
+.visit-empty { padding: 20px 22px; margin: 0; border: 1px dashed #9da9b4; border-radius: 12px; background: #fff; color: #52606b; }
 .help-note { margin-top: 28px; padding: 18px 22px; border-left: 4px solid #c71f32; border-radius: 4px 10px 10px 4px; background: #fff; color: #52606b; line-height: 1.5; }
 footer { padding: 20px 24px; color: #6b7780; text-align: center; font-size: .82rem; }
-@media (max-width: 720px) { .site-header { padding: 16px 22px; } main { padding: 28px 18px 50px; } .summary-grid, .milestone-list { grid-template-columns: 1fr; } .summary-card { min-height: 0; } .section-heading { display: block; } .section-heading > p { margin-top: 10px; text-align: left; } .milestone-top { align-items: center; } }
+@media (max-width: 720px) { .site-header { padding: 16px 22px; } main { padding: 28px 18px 50px; } .summary-grid, .milestone-list, .visit-list { grid-template-columns: 1fr; } .summary-card { min-height: 0; } .section-heading { display: block; } .section-heading > p { margin-top: 10px; text-align: left; } .milestone-top { align-items: center; } .visit-top { align-items: center; } }

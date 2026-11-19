@@ -7,8 +7,8 @@
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Arby's equipment updates</title>
-  <link rel="stylesheet" href="track.css">
-  <script type="module" src="track.mjs"></script>
+  <link rel="stylesheet" href="track.css?v=3">
+  <script type="module" src="track.mjs?v=3"></script>
 </head>
 <body>
   <div class="page-shell">
@@ -25,7 +25,11 @@
       <section id="project" hidden>
         <p class="eyebrow">Your installation progress</p>
         <h1>Follow your installation</h1>
-        <p class="intro">Completed and in-progress steps reflect verified information from the Arby's service workstream. “Not confirmed” means we have not yet verified an update for that step; it may still be underway. A requested date is a planning request until the installation date is confirmed.</p>
+        <p class="intro">Project and work-order progress reflect verified information from the Arby's service workstream. “Not confirmed” means we have not yet verified an update; work may still be underway. A requested date is a planning request until the installation date is confirmed.</p>
+        <section id="freshness-warning" class="freshness-warning" role="status" aria-live="polite" hidden>
+          <strong id="freshness-title"></strong>
+          <p id="freshness-copy"></p>
+        </section>
         <div class="summary-grid">
           <div class="summary-card"><span>Customer requested date</span><strong id="requested-date"></strong><small>This is the date requested in the form.</small></div>
           <div class="summary-card"><span>Confirmed installation date</span><strong id="confirmed-date"></strong><small id="confirmed-note"></small></div>
@@ -33,6 +37,9 @@
         </div>
         <div class="section-heading"><div><p class="eyebrow">The path ahead</p><h2>Project milestones</h2></div><p id="source-time"></p></div>
         <ol id="milestone-list" class="milestone-list"></ol>
+        <div class="section-heading visit-heading"><div><p class="eyebrow">Individual field visits</p><h2>Work orders</h2></div><p>Visit states come from verified work-order records. A date alone does not mark work complete.</p></div>
+        <p id="visit-empty" class="visit-empty" hidden></p>
+        <ol id="visit-list" class="visit-list"></ol>
         <p class="help-note">Dates and work steps can change as plans are confirmed. For questions or a change to your request, reply to the email that shared this link.</p>
       </section>
     </main>
