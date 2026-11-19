@@ -61,6 +61,8 @@ h3 { margin-bottom: 0; font-size: 1.12rem; }
 .visit-complete .visit-badge { background: #dff2e7; color: #075b2e; }
 .visit-cancelled { border-left-color: #815066; }
 .visit-cancelled .visit-badge { background: #f3e7ed; color: #683b50; }
+.visit-observed { border-left-color: #376796; }
+.visit-observed .visit-badge { background: #e6f0fa; color: #244d75; }
 .visit-empty { padding: 20px 22px; margin: 0; border: 1px dashed #9da9b4; border-radius: 12px; background: #fff; color: #52606b; }
 .help-note { margin-top: 28px; padding: 18px 22px; border-left: 4px solid #c71f32; border-radius: 4px 10px 10px 4px; background: #fff; color: #52606b; line-height: 1.5; }
 footer { padding: 20px 24px; color: #6b7780; text-align: center; font-size: .82rem; }

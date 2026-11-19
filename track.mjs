@@ -1,4 +1,4 @@
-import { PHASES, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=3';
+import { PHASES, ROSTER_PROJECT_SCHEMA, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=4';
 
 const loading = document.getElementById('loading');
 const unavailable = document.getElementById('unavailable');
@@ -17,6 +17,16 @@ const VISIT_PROGRESS = Object.freeze({
   inProgress: ['In progress', 'The service workstream marks this visit in progress.'],
   complete: ['Complete', 'The service workstream marks this visit complete.'],
   cancelled: ['Canceled', 'This visit was canceled in the service workstream.'],
+});
+const OBSERVED_STATUS = Object.freeze({
+  PendingSchedule: ['Date pending', 'Thirsty is waiting for a service date for this work order.'],
+  PendingReadiness: ['Readiness pending', 'Thirsty is waiting for a readiness review.'],
+  Open: ['Open', 'Thirsty currently marks this work order open.'],
+  Scheduled: ['Scheduled in Thirsty', 'Thirsty currently marks this visit scheduled. Plans may change.'],
+  InProgress: ['In progress in Thirsty', 'Thirsty currently marks this visit in progress.'],
+  Completed: ['Completed in Thirsty', 'Thirsty currently marks this visit complete. Project closeout may still be pending.'],
+  Cancelled: ['Canceled in Thirsty', 'Thirsty currently marks this visit canceled.'],
+  NeedsReview: ['Update being checked', 'This work order is linked to your request; its current status needs review before we can show more.'],
 });
 const COMPLETE_PHASE_COPY = Object.freeze({
   requestReceived: 'Your request has been received.',
@@ -70,13 +80,15 @@ function renderFreshness(verifiedAtUtc) {
 
 function renderVisits(project) {
   const visits = project.visits;
+  const rosterOnly = project.schema === ROSTER_PROJECT_SCHEMA;
   visitEmpty.hidden = Array.isArray(visits) && visits.length > 0;
   visitEmpty.textContent = visitEmpty.hidden ? '' : visits === undefined
     ? 'Individual work-order details have not been published for this project yet.'
-    : 'No individual work orders have been verified for this project yet.';
+    : rosterOnly ? 'No work orders are currently linked to this request in the verified source.'
+      : 'No individual work orders have been verified for this project yet.';
   const cards = (visits ?? []).map((visit, index) => {
     const item = document.createElement('li');
-    item.className = `visit visit-${visit.progress}`;
+    item.className = rosterOnly ? 'visit visit-observed' : `visit visit-${visit.progress}`;
     item.dataset.visitRef = visit.ref;
     const top = document.createElement('div');
     top.className = 'visit-top';
@@ -89,10 +101,10 @@ function renderVisits(project) {
     name.append(caption, title);
     const badge = document.createElement('span');
     badge.className = 'visit-badge';
-    badge.textContent = VISIT_PROGRESS[visit.progress][0];
+    badge.textContent = rosterOnly ? OBSERVED_STATUS[visit.observedStatus][0] : VISIT_PROGRESS[visit.progress][0];
     top.append(name, badge);
     const explanation = document.createElement('p');
-    explanation.textContent = VISIT_PROGRESS[visit.progress][1];
+    explanation.textContent = rosterOnly ? OBSERVED_STATUS[visit.observedStatus][1] : VISIT_PROGRESS[visit.progress][1];
     item.append(top, explanation);
     return item;
   });
@@ -100,6 +112,10 @@ function renderVisits(project) {
 }
 
 function render(project) {
+  const rosterOnly = project.schema === ROSTER_PROJECT_SCHEMA;
+  document.querySelector('.intro').textContent = rosterOnly
+    ? 'This page shows the latest verified Thirsty work-order roster for your request. Project milestones stay unconfirmed until their supporting events are checked. Your requested date is a planning request.'
+    : 'Project and work-order progress reflect verified information from the Arby’s service workstream. “Not confirmed” means we have not yet verified an update; work may still be underway. A requested date is a planning request until the installation date is confirmed.';
   document.getElementById('requested-date').textContent = project.customerRequestedDate
     ? displayDate(project.customerRequestedDate) : 'Not provided';
   document.getElementById('confirmed-date').textContent = displayDate(project.confirmedInstallDate);

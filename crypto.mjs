@@ -1,6 +1,7 @@
 export const CIPHER_SCHEMA = 'arbys-customer-cipher/v1';
 export const LEGACY_PROJECT_SCHEMA = 'arbys-customer-status/v1';
 export const PROJECT_SCHEMA = 'arbys-customer-status/v2';
+export const ROSTER_PROJECT_SCHEMA = 'arbys-customer-status/roster-v1';
 export const AAD_PREFIX = 'arbys-customer-status/v1:';
 export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 const FUTURE_SKEW_MS = 5 * 60 * 1000;
@@ -13,6 +14,10 @@ const UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const VISIT_REF_RE = /^v_[0-9a-f]{12}$/;
 const VISIT_TYPES = new Set(['Survey', 'LineRun', 'Install', 'FireUp', 'Other', 'Undefined']);
 const VISIT_PROGRESS = new Set(['notConfirmed', 'scheduled', 'inProgress', 'complete', 'cancelled']);
+const OBSERVED_STATES = new Set([
+  'PendingSchedule', 'PendingReadiness', 'Open', 'Scheduled',
+  'InProgress', 'Completed', 'Cancelled', 'NeedsReview',
+]);
 export const PHASES = Object.freeze([
   ['requestReceived', 'Request received', 'Your request is in our workstream.'],
   ['dateReview', 'Date review', 'We are checking the service date with the provider and your team.'],
@@ -44,6 +49,33 @@ function validUtc(value) {
 }
 
 export function validateProject(value) {
+  if (value?.schema === ROSTER_PROJECT_SCHEMA) {
+    if (!exactKeys(value, ['schema', 'slug', 'customerRequestedDate', 'lastVerifiedAtUtc', 'milestones', 'visits'])
+      || !HANDLE_RE.test(value.slug) || !validDate(value.customerRequestedDate, true)
+      || !validUtc(value.lastVerifiedAtUtc)) {
+      throw new Error('Customer roster shape or identity is invalid');
+    }
+    if (!exactKeys(value.milestones, PHASE_IDS)
+      || value.milestones.requestReceived !== 'complete'
+      || ['dateReview', 'equipmentDelivery', 'installation', 'closeout']
+        .some((id) => value.milestones[id] !== 'pending')) {
+      throw new Error('Roster release cannot promote unverified project phases');
+    }
+    if (!Array.isArray(value.visits) || value.visits.length > 64
+      || value.milestones.workOrders !== (value.visits.length ? 'inProgress' : 'pending')) {
+      throw new Error('Roster visits and work-order phase disagree');
+    }
+    const refs = new Set();
+    for (const visit of value.visits) {
+      if (!exactKeys(visit, ['ref', 'visitType', 'observedStatus'])
+        || !VISIT_REF_RE.test(visit.ref) || !VISIT_TYPES.has(visit.visitType)
+        || !OBSERVED_STATES.has(visit.observedStatus) || refs.has(visit.ref)) {
+        throw new Error('Roster visit is invalid or repeated');
+      }
+      refs.add(visit.ref);
+    }
+    return value;
+  }
   const legacy = value?.schema === LEGACY_PROJECT_SCHEMA;
   const fields = ['schema', 'slug', 'customerRequestedDate', 'confirmedInstallDate', 'lastVerifiedAtUtc', 'milestones'];
   if (!legacy) fields.push('visits');
