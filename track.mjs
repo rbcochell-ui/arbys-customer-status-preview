@@ -1,4 +1,4 @@
-import { OBSERVED_SUBSET_SCHEMA, PHASES, ROSTER_PROJECT_SCHEMA, STALE_AFTER_MS, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=observed-3';
+import { OBSERVED_SUBSET_SCHEMA, PHASES, ROSTER_PROJECT_SCHEMA, STALE_AFTER_MS, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=wo-only-1';
 
 const loading = document.getElementById('loading');
 const unavailable = document.getElementById('unavailable');
@@ -155,10 +155,13 @@ function render(project) {
   document.querySelector('.intro').textContent = rosterOnly
     ? 'This page shows the latest verified Thirsty work-order roster for your request. Project milestones stay unconfirmed until their supporting events are checked. Your requested date is a planning request.'
     : partial
-      ? 'This limited page shows the work orders verified so far for your request. Other work may still be linked. Project steps remain unconfirmed until their supporting events are checked. Your requested date is a planning request.'
+      ? 'This limited page shows the work orders verified so far for your request. Other work may still be linked. Project steps remain unconfirmed until their supporting events are checked. The requested date comes from the initial FORM submission and remains a planning request.'
     : 'Project and work-order progress reflect verified information from the Arby’s service workstream. “Not confirmed” means we have not yet verified an update; work may still be underway. A requested date is a planning request until the installation date is confirmed.';
   document.getElementById('requested-date').textContent = project.customerRequestedDate
     ? displayDate(project.customerRequestedDate) : 'Not provided';
+  document.getElementById('requested-date-note').textContent = partial
+    ? 'Requested in the initial FORM submission. Later request changes may not appear here until reviewed.'
+    : 'This is the date requested in the form.';
   document.getElementById('confirmed-date').textContent = project.confirmedInstallDate
     ? displayDate(project.confirmedInstallDate) : 'Not verified';
   document.getElementById('confirmed-note').textContent = project.confirmedInstallDate
@@ -166,7 +169,7 @@ function render(project) {
   const completed = PHASES.filter(([id]) => project.milestones[id] === 'complete').length;
   document.getElementById('progress-count').textContent = String(completed);
   document.getElementById('progress-card').hidden = partial;
-  document.getElementById('source-time').textContent = `${partial ? 'Request and observed work orders checked as of' : 'Source data as of'} ${timeFormat.format(new Date(project.lastVerifiedAtUtc))}`;
+  document.getElementById('source-time').textContent = `${partial ? 'Work orders checked as of' : 'Source data as of'} ${timeFormat.format(new Date(project.lastVerifiedAtUtc))}`;
   renderFreshness(project.lastVerifiedAtUtc);
   const cards = PHASES.map(([id, title, description], index) => {
     const item = document.createElement('li');
