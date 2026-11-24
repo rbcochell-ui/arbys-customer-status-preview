@@ -1,4 +1,4 @@
-import { OBSERVED_SUBSET_SCHEMA, PHASES, ROSTER_PROJECT_SCHEMA, STALE_AFTER_MS, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=wo-only-1';
+import { FORM_ONLY_SCHEMA, OBSERVED_SUBSET_SCHEMA, PHASES, ROSTER_PROJECT_SCHEMA, STALE_AFTER_MS, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=form-only-1';
 import { readEncryptedStatus } from './status-source.mjs?v=dual-carrier-1';
 
 const loading = document.getElementById('loading');
@@ -71,14 +71,15 @@ function phaseStatus(status) {
   return status === 'complete' ? 'Complete' : status === 'inProgress' ? 'In progress' : 'Not confirmed';
 }
 
-function renderFreshness(verifiedAtUtc) {
+function renderFreshness(verifiedAtUtc, formOnly = false) {
   const state = freshnessState(verifiedAtUtc);
   freshnessWarning.dataset.state = state;
   freshnessWarning.hidden = state === 'current';
   if (state === 'stale') {
     document.getElementById('freshness-title').textContent = 'Updates delayed';
-    document.getElementById('freshness-copy').textContent =
-      'This is the last verified snapshot and may not reflect recent service changes. Please reply to the email that shared this link for a current update.';
+    document.getElementById('freshness-copy').textContent = formOnly
+      ? 'This is the last FORM snapshot. Request details may have changed, and this update does not include verified work-order progress. Please reply to the email that shared this link for a current update.'
+      : 'This is the last verified snapshot and may not reflect recent service changes. Please reply to the email that shared this link for a current update.';
   } else if (state === 'clockMismatch') {
     document.getElementById('freshness-title').textContent = 'Verification time needs review';
     document.getElementById('freshness-copy').textContent =
@@ -86,7 +87,7 @@ function renderFreshness(verifiedAtUtc) {
   }
 }
 
-function scheduleFreshnessDeadline(verifiedAtUtc) {
+function scheduleFreshnessDeadline(verifiedAtUtc, formOnly = false) {
   clearTimeout(freshnessDeadlineTimer);
   freshnessDeadlineTimer = undefined;
   renderedVerifiedAtUtc = verifiedAtUtc;
@@ -95,9 +96,9 @@ function scheduleFreshnessDeadline(verifiedAtUtc) {
   freshnessDeadlineTimer = setTimeout(() => {
     freshnessDeadlineTimer = undefined;
     if (renderedVerifiedAtUtc !== verifiedAtUtc || projectArea.hidden) return;
-    renderFreshness(verifiedAtUtc);
+    renderFreshness(verifiedAtUtc, formOnly);
     // A changed device clock can make a timer fire before the 24-hour boundary.
-    if (freshnessState(verifiedAtUtc) === 'current') scheduleFreshnessDeadline(verifiedAtUtc);
+    if (freshnessState(verifiedAtUtc) === 'current') scheduleFreshnessDeadline(verifiedAtUtc, formOnly);
   }, Math.max(1, remaining + 1));
 }
 
@@ -105,11 +106,13 @@ function renderVisits(project) {
   const visits = project.visits;
   const rosterOnly = project.schema === ROSTER_PROJECT_SCHEMA;
   const partial = project.schema === OBSERVED_SUBSET_SCHEMA;
+  const formOnly = project.schema === FORM_ONLY_SCHEMA;
   const observed = rosterOnly || partial;
   visitEmpty.hidden = Array.isArray(visits) && visits.length > 0;
   visitEmpty.textContent = visitEmpty.hidden ? '' : visits === undefined
     ? 'Individual work-order details have not been published for this project yet.'
-    : partial ? 'No work orders have been verified in this limited view yet. Others may exist.'
+    : formOnly ? 'This update does not include verified work-order progress yet. Work may already be underway.'
+      : partial ? 'No work orders have been verified in this limited view yet. Others may exist.'
       : rosterOnly ? 'No work orders are currently linked to this request in the verified source.'
       : 'No individual work orders have been verified for this project yet.';
   const cards = (visits ?? []).map((visit, index) => {
@@ -142,25 +145,33 @@ function renderVisits(project) {
 function render(project) {
   const rosterOnly = project.schema === ROSTER_PROJECT_SCHEMA;
   const partial = project.schema === OBSERVED_SUBSET_SCHEMA;
-  projectArea.dataset.scope = partial ? 'partial' : 'full';
-  document.getElementById('project-eyebrow').textContent = partial ? 'Limited update' : 'Your installation progress';
-  document.getElementById('project-title').textContent = partial ? 'Your request: work orders verified so far' : 'Follow your installation';
-  document.getElementById('scope-note').textContent = partial
-    ? 'Work orders verified so far; others may exist. This is a limited view of the records checked to date.' : '';
-  document.getElementById('scope-note').hidden = !partial;
-  document.getElementById('milestone-heading').textContent = partial ? 'Project steps under review' : 'Project milestones';
-  document.getElementById('visit-heading').textContent = partial ? 'Work orders verified so far' : 'Work orders';
-  document.getElementById('visit-intro').textContent = partial
+  const formOnly = project.schema === FORM_ONLY_SCHEMA;
+  projectArea.dataset.scope = formOnly ? 'form-only' : partial ? 'partial' : 'full';
+  document.getElementById('project-eyebrow').textContent = formOnly ? 'Your request' : partial ? 'Limited update' : 'Your installation progress';
+  document.getElementById('project-title').textContent = formOnly ? 'We received your request' : partial ? 'Your request: work orders verified so far' : 'Follow your installation';
+  document.getElementById('scope-note').textContent = formOnly
+    ? 'This page confirms the FORM request only. This update does not include verified Thirsty work-order progress.'
+    : partial ? 'Work orders verified so far; others may exist. This is a limited view of the records checked to date.' : '';
+  document.getElementById('scope-note').hidden = !(partial || formOnly);
+  document.getElementById('milestone-heading').textContent = formOnly ? 'Project steps awaiting verification' : partial ? 'Project steps under review' : 'Project milestones';
+  document.getElementById('visit-heading').textContent = formOnly ? 'Work-order progress' : partial ? 'Work orders verified so far' : 'Work orders';
+  document.getElementById('visit-intro').textContent = formOnly
+    ? 'This FORM-only update does not confirm whether a work order exists or what stage it has reached.'
+    : partial
     ? 'Others may exist. These are only the visits whose current Thirsty status was checked; a completed visit does not complete the whole project.'
     : 'Visit states come from verified work-order records. A date alone does not mark work complete.';
-  document.querySelector('.intro').textContent = rosterOnly
+  document.querySelector('.intro').textContent = formOnly
+    ? 'We received the request entered in FORM.com. This page can show work-order progress once verified Thirsty updates are added. A customer-requested date is a planning request until the installation date is confirmed.'
+    : rosterOnly
     ? 'This page shows the latest verified Thirsty work-order roster for your request. Project milestones stay unconfirmed until their supporting events are checked. Your requested date is a planning request.'
     : partial
       ? 'This limited page shows the work orders verified so far for your request. Other work may still be linked. Project steps remain unconfirmed until their supporting events are checked. The requested date comes from the initial FORM submission and remains a planning request.'
     : 'Project and work-order progress reflect verified information from the Arby’s service workstream. “Not confirmed” means we have not yet verified an update; work may still be underway. A requested date is a planning request until the installation date is confirmed.';
   document.getElementById('requested-date').textContent = project.customerRequestedDate
     ? displayDate(project.customerRequestedDate) : 'Not provided';
-  document.getElementById('requested-date-note').textContent = partial
+  document.getElementById('requested-date-note').textContent = formOnly
+    ? 'Requested in the FORM submission. Later changes have not been checked in this view.'
+    : partial
     ? 'Requested in the initial FORM submission. Later request changes may not appear here until reviewed.'
     : 'This is the date requested in the form.';
   document.getElementById('confirmed-date').textContent = project.confirmedInstallDate
@@ -169,9 +180,9 @@ function render(project) {
     ? 'Confirmed from the service workstream.' : 'A confirmed installation date has not been verified in this view.';
   const completed = PHASES.filter(([id]) => project.milestones[id] === 'complete').length;
   document.getElementById('progress-count').textContent = String(completed);
-  document.getElementById('progress-card').hidden = partial;
-  document.getElementById('source-time').textContent = `${partial ? 'Work orders checked as of' : 'Source data as of'} ${timeFormat.format(new Date(project.lastVerifiedAtUtc))}`;
-  renderFreshness(project.lastVerifiedAtUtc);
+  document.getElementById('progress-card').hidden = partial || formOnly;
+  document.getElementById('source-time').textContent = `${formOnly ? 'FORM request checked as of' : partial ? 'Work orders checked as of' : 'Source data as of'} ${timeFormat.format(new Date(project.lastVerifiedAtUtc))}`;
+  renderFreshness(project.lastVerifiedAtUtc, formOnly);
   const cards = PHASES.map(([id, title, description], index) => {
     const item = document.createElement('li');
     const status = project.milestones[id];
@@ -190,7 +201,9 @@ function render(project) {
     top.append(heading, badge);
     const explanation = document.createElement('p');
     if (status === 'pending') {
-      explanation.textContent = partial && id === 'workOrders' && project.visits.length > 0
+      explanation.textContent = formOnly && id !== 'requestReceived'
+        ? 'This update does not include verified progress for this step yet.'
+        : partial && id === 'workOrders' && project.visits.length > 0
         ? 'The listed work orders have status updates, but the full work-order plan has not been confirmed.'
         : rosterOnly && id === 'workOrders' && project.visits.length > 0
         ? 'The listed visits have status updates, but we have not confirmed whether the work-order plan is complete.'
@@ -205,7 +218,7 @@ function render(project) {
   phaseList.replaceChildren(...cards);
   renderVisits(project);
   show('project');
-  scheduleFreshnessDeadline(project.lastVerifiedAtUtc);
+  scheduleFreshnessDeadline(project.lastVerifiedAtUtc, formOnly);
 }
 
 async function refresh() {

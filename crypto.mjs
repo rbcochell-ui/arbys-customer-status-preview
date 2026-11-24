@@ -3,6 +3,7 @@ export const LEGACY_PROJECT_SCHEMA = 'arbys-customer-status/v1';
 export const PROJECT_SCHEMA = 'arbys-customer-status/v2';
 export const ROSTER_PROJECT_SCHEMA = 'arbys-customer-status/roster-v1';
 export const OBSERVED_SUBSET_SCHEMA = 'arbys-customer-status/observed-v2';
+export const FORM_ONLY_SCHEMA = 'arbys-customer-status/form-received-v1';
 export const AAD_PREFIX = 'arbys-customer-status/v1:';
 export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 const FUTURE_SKEW_MS = 5 * 60 * 1000;
@@ -59,6 +60,18 @@ export function rosterWorkOrdersPhase(visits) {
 }
 
 export function validateProject(value) {
+  if (value?.schema === FORM_ONLY_SCHEMA) {
+    if (!exactKeys(value, ['schema', 'slug', 'customerRequestedDate', 'lastVerifiedAtUtc', 'milestones', 'visits'])
+      || !HANDLE_RE.test(value.slug) || !validDate(value.customerRequestedDate, true)
+      || !validUtc(value.lastVerifiedAtUtc) || !Array.isArray(value.visits)
+      || value.visits.length !== 0 || !exactKeys(value.milestones, PHASE_IDS)
+      || value.milestones.requestReceived !== 'complete'
+      || PHASE_IDS.filter((id) => id !== 'requestReceived')
+        .some((id) => value.milestones[id] !== 'pending')) {
+      throw new Error('FORM-only status cannot assert work-order progress');
+    }
+    return value;
+  }
   const roster = value?.schema === ROSTER_PROJECT_SCHEMA;
   const observedSubset = value?.schema === OBSERVED_SUBSET_SCHEMA;
   if (roster || observedSubset) {
