@@ -1,4 +1,5 @@
 import { OBSERVED_SUBSET_SCHEMA, PHASES, ROSTER_PROJECT_SCHEMA, STALE_AFTER_MS, decryptProject, freshnessState, parseCapabilityLocation } from './crypto.mjs?v=wo-only-1';
+import { readEncryptedStatus } from './status-source.mjs?v=dual-carrier-1';
 
 const loading = document.getElementById('loading');
 const unavailable = document.getElementById('unavailable');
@@ -215,13 +216,9 @@ async function refresh() {
   try {
     const { handle, key } = parseCapabilityLocation(window.location);
     if (!globalThis.crypto?.subtle) throw new Error('Secure browser context unavailable');
-    const dataUrl = new URL(`data/${handle}.json`, window.location.href);
-    dataUrl.searchParams.set('fresh', String(Date.now()));
-    const response = await fetch(dataUrl, { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: activeFetch.signal });
-    if (!response.ok) throw new Error('Status file unavailable');
-    const body = await response.text();
-    if (body.length > 32768) throw new Error('Status file too large');
-    const project = await decryptProject(JSON.parse(body), handle, key);
+    const envelope = await readEncryptedStatus(handle, window.location.href,
+      { signal: activeFetch.signal });
+    const project = await decryptProject(envelope, handle, key);
     if (sequence === currentLoad) render(project);
   } catch {
     if (sequence === currentLoad) show('unavailable');
